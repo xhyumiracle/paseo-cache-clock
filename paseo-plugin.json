@@ -3,7 +3,7 @@
   "name": "Cache clock",
   "description": "Shows how long each Claude agent's prompt cache stays warm.",
   "media": [
-    "assets/pill.png"
+    "assets/screenshot.png"
   ],
   "requirements": {
     "paseo": ">=0.11.2"

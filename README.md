@@ -2,7 +2,7 @@
 
 A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
 
-![Warm and cold pills with their hover text](assets/pill.png)
+![The cache clock above the Paseo composer](assets/screenshot.png)
 
 ## Install
 
