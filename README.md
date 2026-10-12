@@ -2,7 +2,7 @@
 
 A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
 
-![The cache clock above the Paseo composer](assets/screenshot.png)
+![The cache clock above the Paseo composer](assets/composer.png)
 
 ## Install
 
