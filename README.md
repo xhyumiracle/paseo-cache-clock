@@ -2,7 +2,7 @@
 
 A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
 
-![The cache pill beside the message box](assets/pill.png)
+![Warm and cold pills with their hover text](assets/pill.png)
 
 ## Install
 
@@ -26,7 +26,6 @@ It mirrors the prompt cache clock in Claude Code's VS Code extension.
 | --- | --- |
 | Clock `54m` | Warm. Minutes left before it expires. |
 | Red clock `cold` | Expired, compacted, or the model changed. |
-| Nothing | Not enough data yet. |
 
 Hover for details. Claude agents only.
 
