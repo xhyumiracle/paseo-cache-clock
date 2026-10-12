@@ -20,14 +20,15 @@ Install the Paseo plugin at github.com/xhyumiracle/paseo-cache-warmth
 
 ## What it shows
 
+It mirrors the prompt cache clock in Claude Code's VS Code extension.
+
 | Pill | Meaning |
 | --- | --- |
-| `cache 54:03` | Warm. Time left before it expires. |
-| `cache live` | A turn is running. |
-| `cache cold` | Expired, or the model changed. |
-| `cache ?` | Not enough data, e.g. right after a compaction. |
+| Clock `54m` | Warm. Minutes left before it expires. |
+| Red clock | Cold: expired, compacted, or the model changed. |
+| Nothing | Not enough data yet. |
 
-Claude agents only.
+Hover for details. Claude agents only.
 
 ## How it stays accurate
 

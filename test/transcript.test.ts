@@ -25,3 +25,6 @@ eq("synthetic error is not 'last'", cacheStateOf([...base, L({ type: "assistant"
 eq("torn last line ignored", cacheStateOf([...base, '{"type":"assis'], true), H("T2"));
 eq("no writes anywhere: null", cacheStateOf([user("u0", null, "T0"), req("a1", "u0", "A", "T1")], true), null);
 eq("empty: null", cacheStateOf([], true), null);
+const boundary = (u: string, ts: string) => L({ type: "system", subtype: "compact_boundary", uuid: u, parentUuid: null, timestamp: ts });
+eq("compaction after the last request: compacted", cacheStateOf([...base, boundary("cb", "T9"), user("cs", "cb", "T9", { isCompactSummary: true })], true), "compacted");
+eq("first request after compaction: null", cacheStateOf([...base, boundary("cb", "T9"), user("cs", "cb", "T9", { isCompactSummary: true }), req("c1", "cs", "C", "T10", 0, 1)], true), null);

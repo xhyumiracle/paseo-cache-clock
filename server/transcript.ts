@@ -1,7 +1,7 @@
 import { open, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { CacheState } from "../shared/cache";
+import type { CacheRead } from "../shared/cache";
 
 const TTL = { "5m": 5 * 60_000, "1h": 60 * 60_000 };
 const FIRST_WINDOW = 256 << 10;
@@ -12,6 +12,7 @@ type Usage = {
 };
 type Entry = {
   type?: string;
+  subtype?: string;
   uuid?: string;
   parentUuid?: string | null;
   timestamp?: string;
@@ -46,8 +47,9 @@ const parse = (line: string): Entry | undefined => {
 // user message or an earlier request; attachment and compact-summary
 // timestamps can trail the send and are skipped. That ancestor's timestamp
 // is a lower bound on the send, so touchedAt + ttlMs never runs past the
-// real expiry. Returns undefined when the window is too short to decide.
-export function cacheStateOf(lines: string[], atStart: boolean): CacheState | null | undefined {
+// real expiry. A compaction after R means the next request starts cold.
+// Returns undefined when the window is too short to decide.
+export function cacheStateOf(lines: string[], atStart: boolean): CacheRead | undefined {
   let last: Entry | undefined;
   let ttl: number | undefined;
   let touchedAt: string | undefined;
@@ -57,6 +59,7 @@ export function cacheStateOf(lines: string[], atStart: boolean): CacheState | nu
     const e = parse(lines[k]);
     if (!e) continue;
     if (!last) {
+      if (e.subtype === "compact_boundary" && !e.isSidechain) return "compacted";
       if (!isRequest(e) || e.isSidechain) continue;
       last = e;
       ttl = writeTtl(e);
@@ -90,7 +93,7 @@ async function readTail(path: string, size: number, start: number): Promise<stri
 }
 
 const paths = new Map<string, string>();
-const memo = new Map<string, { key: string; state: CacheState | null }>();
+const memo = new Map<string, { key: string; state: CacheRead }>();
 
 async function findTranscript(sessionId: string): Promise<string | null> {
   const known = paths.get(sessionId);
@@ -110,7 +113,7 @@ async function findTranscript(sessionId: string): Promise<string | null> {
   return null;
 }
 
-export async function readCacheState(sessionId: string): Promise<CacheState | null> {
+export async function readCacheState(sessionId: string): Promise<CacheRead> {
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return null;
   const path = await findTranscript(sessionId);
   if (!path) return null;
@@ -118,7 +121,7 @@ export async function readCacheState(sessionId: string): Promise<CacheState | nu
   const key = `${size}:${mtimeMs}`;
   const hit = memo.get(sessionId);
   if (hit?.key === key) return hit.state;
-  let state: CacheState | null = null;
+  let state: CacheRead = null;
   for (let bytes = FIRST_WINDOW; ; bytes *= 2) {
     const start = Math.max(0, size - bytes);
     const found = cacheStateOf(await readTail(path, size, start), start === 0);

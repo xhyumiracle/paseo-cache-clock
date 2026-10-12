@@ -1,13 +1,28 @@
-import type { PluginButtonRegistration, PluginClientContext } from "@getpaseo/plugin/client";
-import { readCacheRpc, type CacheState } from "../shared/cache";
-import { isClaude, isLive, sessionIdOf, warmthIcon, warmthLabel, warmthOf, type PaseoAgent } from "./warmth";
+import type { PluginButton, PluginButtonIconProps, PluginButtonRegistration, PluginClientContext } from "@getpaseo/plugin/client";
+import { Icon } from "@getpaseo/plugin/client/react-native";
+import { readCacheRpc, type CacheRead } from "../shared/cache";
+import { clockLabel, clockOf, clockTitle, isClaude, isLive, sessionIdOf, type PaseoAgent } from "./warmth";
 
 // This plugin typechecks without the DOM library. Declare only what this module uses.
 declare function setInterval(handler: () => void, ms: number): number;
 declare function clearInterval(id: number): void;
 declare const console: { error(...args: unknown[]): void };
 
-type Pill = { agent: PaseoAgent; state?: CacheState | null; handle: PluginButtonRegistration; label: string };
+type Pill = { agent: PaseoAgent; read?: CacheRead; handle: PluginButtonRegistration; shown: string };
+
+const WarmIcon = ({ size, color }: PluginButtonIconProps) => <Icon name="Clock" size={size} color={color} />;
+const ColdIcon = ({ size, theme }: PluginButtonIconProps) => <Icon name="Clock" size={size} color={theme.colors.statusDanger} />;
+
+function face(agent: PaseoAgent, read: CacheRead | undefined) {
+  const c = clockOf(agent, read);
+  const button = {
+    title: clockTitle(c),
+    label: clockLabel(c),
+    icon: c.kind === "cold" ? ColdIcon : WarmIcon,
+    visible: c.kind !== "hidden",
+  } satisfies Partial<PluginButton>;
+  return { button, shown: `${c.kind}|${button.title}` };
+}
 
 // One composer pill per Claude agent, driven by the agent list subscription.
 // The cache only changes while a turn runs, so its state is read from the
@@ -18,18 +33,17 @@ export function contributePills(client: PluginClientContext): () => void {
   const lifetime = new AbortController();
 
   const draw = (pill: Pill) => {
-    const w = warmthOf(pill.agent, pill.state);
-    const label = warmthLabel(w);
-    if (label === pill.label) return;
-    pill.label = label;
-    pill.handle.update({ label, icon: warmthIcon(w) });
+    const { button, shown } = face(pill.agent, pill.read);
+    if (shown === pill.shown) return;
+    pill.shown = shown;
+    pill.handle.update(button);
   };
 
   const read = (pill: Pill) => {
     const sessionId = sessionIdOf(pill.agent);
     if (!sessionId) return;
     client.rpc(readCacheRpc, { sessionId }).then(
-      (state) => { if (pills.get(pill.agent.id) === pill) { pill.state = state; draw(pill); } },
+      (read) => { if (pills.get(pill.agent.id) === pill) { pill.read = read; draw(pill); } },
       (error) => console.error("cache-warmth: read failed", error),
     );
   };
@@ -51,20 +65,15 @@ export function contributePills(client: PluginClientContext): () => void {
       if (turnEnded || resumed) read(existing);
       return draw(existing);
     }
-    const w = warmthOf(agent, undefined);
+    const { button, shown } = face(agent, undefined);
     const created: Pill = {
       agent,
-      label: warmthLabel(w),
+      shown,
       handle: client.addComposerPill({
         id: "cache-warmth",
         workspaceId: agent.workspaceId,
         agentId: agent.id,
-        button: {
-          title: "Prompt cache: time left before it expires",
-          label: warmthLabel(w),
-          icon: warmthIcon(w),
-          behavior: { kind: "action", onPress: () => {} },
-        },
+        button: { ...button, behavior: { kind: "action", onPress: () => {} } },
       }),
     };
     pills.set(agent.id, created);
