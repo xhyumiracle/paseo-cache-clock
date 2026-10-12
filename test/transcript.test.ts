@@ -1,0 +1,27 @@
+import { cacheStateOf } from "../server/transcript.ts";
+const L = (o: object) => JSON.stringify(o);
+const req = (u: string, p: string | null, id: string, ts: string, w5 = 0, w1 = 0, extra = {}) =>
+  L({ type: "assistant", uuid: u, parentUuid: p, requestId: id, timestamp: ts, message: { model: "m", usage: { cache_creation: { ephemeral_5m_input_tokens: w5, ephemeral_1h_input_tokens: w1 } } }, ...extra });
+const user = (u: string, p: string | null, ts: string, extra = {}) => L({ type: "user", uuid: u, parentUuid: p, timestamp: ts, ...extra });
+const att = (u: string, p: string | null, ts: string) => L({ type: "attachment", uuid: u, parentUuid: p, timestamp: ts });
+const eq = (name: string, got: unknown, want: unknown) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  console.log(ok ? "PASS" : "FAIL", name, ok ? "" : `got=${JSON.stringify(got)} want=${JSON.stringify(want)}`);
+  if (!ok) process.exitCode = 1;
+};
+const H = (ts: string, ttl = 3600000) => ({ touchedAt: ts, ttlMs: ttl, model: "m" });
+const base = [user("u0", null, "T0"), req("a1", "u0", "A", "T1", 0, 10), user("u2", "a1", "T2"), req("b1", "u2", "B", "T3", 0, 5), user("u4", "b1", "T4"), req("b2", "b1", "B", "T5", 0, 5)];
+eq("trigger is B's parent user, not B's own tool result", cacheStateOf(base, true), H("T2"));
+eq("chain leaves window: undecided", cacheStateOf(base.slice(3), false), undefined);
+eq("read-only B inherits A's TTL", cacheStateOf([user("u0", null, "T0"), req("a1", "u0", "A", "T1", 7), user("u2", "a1", "T2"), req("b1", "u2", "B", "T3")], true), H("T2", 300000));
+eq("mixed writes count as 5m", cacheStateOf([user("u0", null, "T0"), req("a1", "u0", "A", "T1", 3, 9)], true), H("T0", 300000));
+eq("late attachment skipped for user", cacheStateOf([user("u0", null, "T0"), att("x", "u0", "T9"), req("a1", "x", "A", "T1", 0, 1)], true), H("T0"));
+eq("compact summary skipped; chain ends: null", cacheStateOf([user("c", null, "T9", { isCompactSummary: true }), req("a1", "c", "A", "T1", 0, 1)], true), null);
+eq("prior request is a bound", cacheStateOf([user("u0", null, "T0"), req("a1", "u0", "A", "T1", 0, 1), att("x", "a1", "T9"), req("b1", "x", "B", "T3", 0, 1)], true), H("T1"));
+const fork = [user("u0", null, "T0"), req("a1", "u0", "A", "T1", 0, 1), user("p", "a1", "P1"), user("q", "a1", "Q1"), req("q1", "q", "Q", "Q2", 0, 1), req("p1", "p", "P", "P2", 0, 1), user("qt", "q1", "Q3")];
+eq("interleaved fork follows last request's own branch", cacheStateOf(fork, true), H("P1"));
+eq("sidechain request is not 'last'", cacheStateOf([...base, user("s0", "b2", "S0", { isSidechain: true }), req("s1", "s0", "S", "S1", 9, 0, { isSidechain: true })], true), H("T2"));
+eq("synthetic error is not 'last'", cacheStateOf([...base, L({ type: "assistant", uuid: "e", parentUuid: "b2", requestId: "E", timestamp: "T9", message: { model: "<synthetic>", usage: {} } })], true), H("T2"));
+eq("torn last line ignored", cacheStateOf([...base, '{"type":"assis'], true), H("T2"));
+eq("no writes anywhere: null", cacheStateOf([user("u0", null, "T0"), req("a1", "u0", "A", "T1")], true), null);
+eq("empty: null", cacheStateOf([], true), null);

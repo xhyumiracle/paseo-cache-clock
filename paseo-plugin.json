@@ -1,0 +1,9 @@
+{
+  "id": "cache-warmth",
+  "name": "Cache warmth",
+  "description": "Shows whether each agent's prompt cache is still warm, with a countdown to expiry.",
+  "media": [],
+  "requirements": {
+    "paseo": ">=0.11.2"
+  }
+}
