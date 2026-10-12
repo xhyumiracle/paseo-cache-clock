@@ -1,4 +1,4 @@
-# Cache warmth for Paseo
+# Cache clock for Paseo
 
 A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
 
@@ -9,13 +9,13 @@ A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
 Enable plugins in Paseo settings, then run:
 
 ```bash
-paseo plugin add git:xhyumiracle/paseo-cache-warmth
+paseo plugin add git:xhyumiracle/paseo-cache-clock
 ```
 
 Or hand it to your agent:
 
 ```text
-Install the Paseo plugin at github.com/xhyumiracle/paseo-cache-warmth
+Install the Paseo plugin at github.com/xhyumiracle/paseo-cache-clock
 ```
 
 ## What it shows

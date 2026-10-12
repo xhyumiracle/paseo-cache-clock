@@ -1,7 +1,7 @@
 import type { PluginButton, PluginButtonIconProps, PluginButtonRegistration, PluginClientContext } from "@getpaseo/plugin/client";
 import { Icon } from "@getpaseo/plugin/client/react-native";
 import { readCacheRpc, type CacheRead } from "../shared/cache";
-import { clockLabel, clockOf, clockTitle, isClaude, isLive, sessionIdOf, type PaseoAgent } from "./warmth";
+import { clockLabel, clockOf, clockTitle, isClaude, isLive, sessionIdOf, type PaseoAgent } from "./clock";
 
 // This plugin typechecks without the DOM library. Declare only what this module uses.
 declare function setInterval(handler: () => void, ms: number): number;
@@ -44,7 +44,7 @@ export function contributePills(client: PluginClientContext): () => void {
     if (!sessionId) return;
     client.rpc(readCacheRpc, { sessionId }).then(
       (read) => { if (pills.get(pill.agent.id) === pill) { pill.read = read; draw(pill); } },
-      (error) => console.error("cache-warmth: read failed", error),
+      (error) => console.error("cache-clock: read failed", error),
     );
   };
 
@@ -70,7 +70,7 @@ export function contributePills(client: PluginClientContext): () => void {
       agent,
       shown,
       handle: client.addComposerPill({
-        id: "cache-warmth",
+        id: "cache-clock",
         workspaceId: agent.workspaceId,
         agentId: agent.id,
         button: { ...button, behavior: { kind: "action", onPress: () => {} } },
@@ -102,7 +102,7 @@ export function contributePills(client: PluginClientContext): () => void {
       });
     })
     .catch((error) => {
-      if (!lifetime.signal.aborted) console.error("cache-warmth: agent subscription failed", error);
+      if (!lifetime.signal.aborted) console.error("cache-clock: agent subscription failed", error);
     });
 
   const tick = setInterval(() => pills.forEach(draw), 1_000);

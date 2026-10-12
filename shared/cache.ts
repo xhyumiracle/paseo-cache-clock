@@ -14,7 +14,7 @@ export const CacheReadSchema = z.union([CacheStateSchema, z.literal("compacted")
 export type CacheRead = z.infer<typeof CacheReadSchema>;
 
 export const readCacheRpc = defineRpc({
-  name: "cache-warmth.read",
+  name: "cache-clock.read",
   input: z.object({ sessionId: z.string() }),
   output: CacheReadSchema,
 });

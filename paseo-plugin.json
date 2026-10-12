@@ -1,6 +1,6 @@
 {
-  "id": "cache-warmth",
-  "name": "Cache warmth",
+  "id": "cache-clock",
+  "name": "Cache clock",
   "description": "Shows how long each Claude agent's prompt cache stays warm.",
   "media": [
     "assets/pill.png"
