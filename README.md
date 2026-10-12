@@ -1,6 +1,6 @@
 # Cache clock for Paseo
 
-A live prompt-cache timer for Claude agents in [Paseo](https://paseo.sh).
+A live prompt-cache timer plugin for Claude agents in [Paseo](https://paseo.sh).
 
 ![The cache clock above the Paseo composer](assets/composer.png)
 
