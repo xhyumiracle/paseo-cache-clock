@@ -25,7 +25,7 @@ It mirrors the prompt cache clock in Claude Code's VS Code extension.
 | Pill | Meaning |
 | --- | --- |
 | Clock `54m` | Warm. Minutes left before it expires. |
-| Red clock | Cold: expired, compacted, or the model changed. |
+| Red clock `cold` | Expired, compacted, or the model changed. |
 | Nothing | Not enough data yet. |
 
 Hover for details. Claude agents only.

@@ -3,8 +3,9 @@ import type { CacheRead } from "../shared/cache";
 
 export type PaseoAgent = Exclude<Parameters<PluginClientContext["paseo"]["agents"]["ref"]>[0], string>;
 
-// Mirrors Claude Code's own prompt cache clock: minutes left while warm, a
-// bare red clock when cold, nothing when unknown.
+// Mirrors Claude Code's own prompt cache clock: minutes left while warm, red
+// when cold, nothing when unknown. Paseo pills always carry text, so cold
+// reads "cold" where Claude Code shows a bare red clock.
 export type Clock =
   | { kind: "hidden" }
   | { kind: "warm"; minutesLeft: number }
@@ -33,12 +34,12 @@ export function clockOf(agent: PaseoAgent, read: CacheRead | undefined, now = Da
   return { kind: "cold", reason: "expired", idleMs: now - touched };
 }
 
-export const clockLabel = (c: Clock) => (c.kind === "warm" ? `${c.minutesLeft}m` : "");
+export const clockLabel = (c: Clock) => (c.kind === "warm" ? `${c.minutesLeft}m` : "cold");
 
 // Hover text, worded as in Claude Code.
 export function clockTitle(c: Clock): string {
   if (c.kind === "warm") return `Prompt cache warm, about ${c.minutesLeft} min left.`;
-  if (c.kind === "hidden") return "";
+  if (c.kind === "hidden") return "Prompt cache clock";
   switch (c.reason) {
     case "compacted": return "Prompt cache does not cover the compacted conversation.";
     case "model": return "Prompt cache does not cover the current model.";
