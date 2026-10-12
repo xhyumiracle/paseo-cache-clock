@@ -1,8 +1,10 @@
 {
   "id": "cache-warmth",
   "name": "Cache warmth",
-  "description": "Shows whether each agent's prompt cache is still warm, with a countdown to expiry.",
-  "media": [],
+  "description": "Shows how long each Claude agent's prompt cache stays warm.",
+  "media": [
+    "assets/pill.png"
+  ],
   "requirements": {
     "paseo": ">=0.11.2"
   }
